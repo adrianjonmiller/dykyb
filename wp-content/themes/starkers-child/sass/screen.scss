@@ -1,4 +1,4 @@
-@import "compass/reset";
+@import "homebase";
 @import "compass/layout/sticky-footer";
 @import "compass";
 
@@ -15,8 +15,7 @@
 body {
 	font-family: "museo-sans-condensed", sans-serif;
 	font-weight: 300;
-	
-	
+	background-image: url(http://duggal.com/connect/wp-content/uploads/2013/06/Landscape-Nature-for-Wallpaper-Dekstop-.jpg);
 }
 
 
@@ -31,6 +30,14 @@ h3 {
 	border-bottom: solid thin gray;
 }
 
+* {
+	@include grid-base(1em);
+}
+
+[class*="col-"] {
+	padding-right: 1em;
+}
+
 header {
 	height: 100px;
 		.container {
@@ -38,13 +45,26 @@ header {
 			
 			h1 {
 				margin: $pad/2 0;
+				padding: 3px 8px;
+				background: rgba(black, 0.6);
+				background: rgba(#009eff, 0.6);
+				display: inline-block;
 				a {
-					display: block;
-					text-indent: -9999em;
-					overflow: hidden;
-					background-image: url(../img/logo.png);
-					width: 100px;
-					height: 50px;
+					// display: block;
+					// text-indent: -9999em;
+					// overflow: hidden;
+					// background-image: url(../img/logo.png);
+					// width: 100px;
+					// height: 50px;
+					text-decoration: none;
+					color: white;
+					font-size: 16px;
+					letter-spacing: .2em;;
+				}
+				i {
+					font-size: 14px;
+					font-family: Gerogia, serif;
+					color: white;
 				}
 			}
 		}
@@ -80,36 +100,44 @@ header {
 
 
 ul#main-menu {
+	margin: 0;
+	padding: 0;
+
 	@include clearfix();
 	position: absolute;
 	right: 0;
 	bottom: 0;
+	background-color: rgba(black, 0.6);
+	list-style: none;
 	
 	li {
 		float: left;
 		padding: 0 $pad/2;
-		border-right: solid thin #ddd;
-		border-left: solid thin #eee;
+		// border-right: solid thin #ddd;
+		// border-left: solid thin #eee;
+		list-style: none;
+		margin-right: 2px;
+
 		&:first-of-type {
 			border-left: none;
-			padding-left: 0;
+			// padding-left: 0;
 		}
 		
 		&:last-of-type {
 			border-right: none;
-			padding-right: 0;
+			// padding-right: 0;
 		}
 		
 		a {
 			color: #7e7e7e;
 			text-decoration: none;
-			
+			color: #fff;	
 			text-shadow: 0 -1px #666;
 		}
 		
 		&.current-menu-item {
 			a {
-				color: #555;
+				color: #ccc;
 				text-shadow: none;
 				font-weight: 500;
 			}
@@ -129,11 +157,19 @@ ul#main-menu {
 	padding-top: $pad;
 }
 
-footer {
-	height: 100px;
-	.container {
-		padding: $pad;
-		background: #eee;
-		height: 100%;
+// footer {
+// 	height: 100px;
+// 	.container {
+// 		padding: $pad;
+// 		background: #eee;
+// 		height: 100%;
+// 	}
+// }
+
+.module {
+	padding: 1em;
+	background: rgba(black, 0.6);
+	p {
+		color: white;
 	}
 }
