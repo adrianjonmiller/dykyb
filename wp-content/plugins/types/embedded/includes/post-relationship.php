@@ -1,6 +1,12 @@
 <?php
 /*
  * Post relationship code.
+ *
+ * $HeadURL: http://plugins.svn.wordpress.org/types/trunk/embedded/includes/post-relationship.php $
+ * $LastChangedDate: 2014-08-22 01:02:43 +0000 (Fri, 22 Aug 2014) $
+ * $LastChangedRevision: 970205 $
+ * $LastChangedBy: brucepearson $
+ *
  */
 require_once WPCF_EMBEDDED_INC_ABSPATH . '/editor-support/post-relationship-editor-support.php';
 
@@ -9,29 +15,26 @@ add_action( 'save_post', 'wpcf_pr_admin_save_post_hook', 20, 2 ); // Trigger afe
 
 /**
  * Init function.
- * 
+ *
  * Enqueues styles and scripts on post edit page.
- * 
+ *
  * @param type $post_type
  * @param type $post
  * @param type $groups
- * @param type $wpcf_active 
+ * @param type $wpcf_active
  */
-function wpcf_pr_admin_post_init_action( $post_type, $post, $groups,
-        $wpcf_active ) {
-
+function wpcf_pr_admin_post_init_action( $post_type, $post, $groups, $wpcf_active )
+{
     // See if any data
     $has = wpcf_pr_admin_get_has( $post_type );
     $belongs = wpcf_pr_admin_get_belongs( $post_type );
 
     /*
-     * 
      * Enqueue styles and scripts
      */
     if ( !empty( $has ) || !empty( $belongs ) ) {
 
-        $output = wpcf_pr_admin_post_meta_box_output( $post,
-                array('post_type' => $post_type, 'has' => $has, 'belongs' => $belongs) );
+        $output = wpcf_pr_admin_post_meta_box_output( $post, array('post_type' => $post_type, 'has' => $has, 'belongs' => $belongs) );
         add_meta_box( 'wpcf-post-relationship', __( 'Fields table', 'wpcf' ),
                 'wpcf_pr_admin_post_meta_box', $post_type, 'normal', 'default',
                 array('output' => $output) );
@@ -59,7 +62,7 @@ function wpcf_pr_admin_post_init_action( $post_type, $post, $groups,
             wpcf_admin_add_js_settings( 'wpcf_pr_del_warning',
                     '\'' . __( 'Are you sure about deleting this post?', 'wpcf' ) . '\'' );
             wpcf_admin_add_js_settings( 'wpcf_pr_pagination_warning',
-                    '\'' . __( 'If you continue without saving your changes, it might get lost.',
+                    '\'' . __( 'If you continue without saving your changes, they might get lost.',
                             'wpcf' ) . '\'' );
         }
     }
@@ -67,38 +70,40 @@ function wpcf_pr_admin_post_init_action( $post_type, $post, $groups,
 
 /**
  * Gets post types that belong to current post type.
- * 
+ *
  * @param type $post_type
- * @return type 
+ * @return type
  */
 function wpcf_pr_admin_get_has( $post_type ) {
-    if ( empty( $post_type ) ) {
-        return false;
+    static $cache = array();
+    if ( isset( $cache[$post_type] ) ) {
+        return $cache[$post_type];
     }
     $relationships = get_option( 'wpcf_post_relationship', array() );
     if ( empty( $relationships[$post_type] ) ) {
         return false;
     }
     // See if enabled
-    foreach ( $relationships[$post_type] as $temp_post_type =>
-                $temp_post_type_data ) {
+    foreach ( $relationships[$post_type] as $temp_post_type => $temp_post_type_data ) {
         $active = get_post_type_object( $temp_post_type );
         if ( !$active ) {
             unset( $relationships[$post_type][$temp_post_type] );
         }
     }
-    return !empty( $relationships[$post_type] ) ? $relationships[$post_type] : false;
+    $cache[$post_type] = !empty( $relationships[$post_type] ) ? $relationships[$post_type] : false;
+    return $cache[$post_type];
 }
 
 /**
  * Gets post types that current post type belongs to.
- * 
+ *
  * @param type $post_type
- * @return type 
+ * @return type
  */
 function wpcf_pr_admin_get_belongs( $post_type ) {
-    if ( empty( $post_type ) ) {
-        return false;
+    static $cache = array();
+    if ( isset( $cache[$post_type] ) ) {
+        return $cache[$post_type];
     }
     $relationships = get_option( 'wpcf_post_relationship', array() );
     $results = array();
@@ -114,34 +119,89 @@ function wpcf_pr_admin_get_belongs( $post_type ) {
             }
         }
     }
-    return !empty( $results ) ? $results : false;
+    $cache[$post_type] = !empty( $results ) ? $results : false;
+    return $cache[$post_type];
 }
 
 /**
  * Meta boxes contents.
- * 
+ *
  * @param type $post
- * @param type $args 
+ * @param type $args
  */
-function wpcf_pr_admin_post_meta_box( $post, $args ) {
+function wpcf_pr_admin_post_meta_box( $post, $args )
+{
     if ( !empty( $args['args']['output'] ) ) {
         echo $args['args']['output'];
     } else {
-        _e( 'You will be able to add/edit child posts after saving the parent post.',
-                'wpcf' );
+        $wpcf_pr_admin_belongs = wpcf_pr_admin_get_belongs( $post->post_type );
+        if ( empty( $wpcf_pr_admin_belongs ) ) {
+            _e( 'You will be able to manage child posts after saving this post.', 'wpcf' );
+        } else {
+            _e( 'You will be able to add parent posts after saving this post.', 'wpcf' );
+//            add_action( 'admin_footer', 'wpcf_admin_notice_post_locked_no_parent');
+        }
     }
 }
 
+function wpcf_admin_notice_post_locked_no_parent() {
+    if ( ! $post = get_post() ) {
+        return;
+    }
+    $parent_type = wpcf_pr_admin_get_belongs( $post->post_type );
+    if ( is_array( $parent_type ) && count( $parent_type ) ) {
+        $parent_type = array_shift( array_keys( $parent_type ) );
+        $parent_type = get_post_type_object( $parent_type );
+    } else {
+        return;
+    }
+
+    if ( ( $sendback = wp_get_referer() ) && false === strpos( $sendback, 'post.php' ) && false === strpos( $sendback, 'post-new.php' ) ) {
+        $sendback_text = __('Go back');
+    } else {
+        $sendback = admin_url( 'edit.php' );
+        if ( 'post' != $post->post_type ) {
+            $sendback = add_query_arg( 'post_type', $post->post_type, $sendback );
+        }
+        $sendback_text = get_post_type_object( $post->post_type )->labels->all_items;
+    }
+?>
+<div id="post-lock-dialog" class="notification-dialog-wrap">
+    <div class="notification-dialog-background"></div>
+        <div class="notification-dialog">
+            <div class="post-locked-message">
+                <p>
+<?php
+    if ( 'auto-draft' == $post->post_status ) {
+        printf(
+            __( 'You will be able to add child posts after saving at least one <b>%s</b>.', 'wpcf' ),
+            $parent_type->labels->singular_name
+        );
+    } else {
+        printf(
+            __( 'You will be able to edit child posts after saving at least one <b>%s</b>.', 'wpcf' ),
+            $parent_type->labels->singular_name
+        );
+    }
+?>
+                </p>
+                <p><a class="button button-primary wp-tab-last" href="<?php echo esc_url( $sendback ); ?>"><?php echo $sendback_text; ?></a></p>
+            </div>
+        </div>
+    </div>
+</div>
+<?php
+}
 /**
  * Meta boxes contents output.
- * 
+ *
  * @param type $post
- * @param type $args 
+ * @param type $args
  */
-function wpcf_pr_admin_post_meta_box_output( $post, $args ) {
-
+function wpcf_pr_admin_post_meta_box_output( $post, $args )
+{
     if ( empty( $post->ID ) ) {
-        return false;
+        return array();
     }
 
     global $wpcf;
@@ -151,21 +211,14 @@ function wpcf_pr_admin_post_meta_box_output( $post, $args ) {
     $post_id = !empty( $post->ID ) ? $post->ID : -1;
     $current_post_type = wpcf_admin_get_edited_post_type( $post );
     /*
-     * 
-     * 
-     * 
      * Render has form (child form)
      */
     if ( !empty( $relationships['has'] ) ) {
         foreach ( $relationships['has'] as $post_type => $data ) {
-            $output .= $wpcf->relationship->child_meta_form( $post, $post_type,
-                    $data );
+            $output .= $wpcf->relationship->child_meta_form( $post, $post_type, $data );
         }
     }
     /*
-     * 
-     * 
-     * 
      * Render belongs form (parent form)
      */
     if ( !empty( $relationships['belongs'] ) ) {
@@ -182,8 +235,9 @@ function wpcf_pr_admin_post_meta_box_output( $post, $args ) {
         }
         $output_temp = '';
         foreach ( $relationships['belongs'] as $post_type => $data ) {
-            $output_temp .= wpcf_form_simple( wpcf_pr_admin_post_meta_box_belongs_form( $post,
-                            $post_type, $belongs ) );
+            $output_temp .= wpcf_form_simple(
+                wpcf_pr_admin_post_meta_box_belongs_form( $post, $post_type, $belongs )
+            );
         }
         if ( !empty( $output_temp ) ) {
             $output .= '<div style="margin: 20px 0 10px 0">' . sprintf( __( 'This %s belongs to:',
@@ -195,9 +249,9 @@ function wpcf_pr_admin_post_meta_box_output( $post, $args ) {
 
 /**
  * AJAX delete child item call.
- * 
+ *
  * @param type $post_id
- * @return string 
+ * @return string
  */
 function wpcf_pr_admin_delete_child_item( $post_id ) {
     wp_delete_post( $post_id, true );
@@ -206,19 +260,16 @@ function wpcf_pr_admin_delete_child_item( $post_id ) {
 
 /**
  * Belongs form.
- * 
+ *
  * @param type $post
  * @param type $post_type
  * @param type $data
  * @param type $parent_post_type
  */
-function wpcf_pr_admin_post_meta_box_belongs_form( $post, $type, $belongs ) {
-
+function wpcf_pr_admin_post_meta_box_belongs_form( $post, $type, $belongs )
+{
     global $wpdb;
 
-    if ( empty( $post ) ) {
-        return array();
-    }
     $temp_type = get_post_type_object( $type );
     if ( empty( $temp_type ) ) {
         return array();
@@ -228,8 +279,16 @@ function wpcf_pr_admin_post_meta_box_belongs_form( $post, $type, $belongs ) {
         __( 'Not selected', 'wpcf' ) => 0,
     );
 
-    $items = get_posts( 'post_type=' . $type . '&numberposts=-1&post_status=publish&order=ASC&orderby=title&suppress_filters=0&fields=ids' );
-//    $items = get_posts( 'post_type=' . $type . '&numberposts=-1&post_status=null&order=ASC&orderby=title&suppress_filters=0' );
+    $args = array(
+        'fields' => 'ids',
+        'numberposts' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'post_status' => apply_filters( 'wpcf_pr_belongs_post_status', array( 'publish' ) ),
+        'post_type' => $type,
+        'suppress_filters' => 0,
+    );
+    $items = get_posts($args);
 
     if ( empty( $items ) ) {
         return array();
@@ -242,14 +301,10 @@ function wpcf_pr_admin_post_meta_box_belongs_form( $post, $type, $belongs ) {
             ), OBJECT_K );
 
     foreach ( $items as $temp_post ) {
-//        if ( $temp_post->post_status == 'auto-draft' ) {
-//            continue;
-//        }
         if ( !isset( $_titles[$temp_post]->post_title ) ) {
             continue;
         }
         $options[] = array(
-//            '#title' => $temp_post->post_title,
             '#title' => $_titles[$temp_post]->post_title,
             '#value' => $temp_post,
         );
@@ -274,26 +329,52 @@ function wpcf_pr_admin_post_meta_box_belongs_form( $post, $type, $belongs ) {
 
 /**
  * Updates belongs data.
- * 
+ *
  * @param type $post_id
  * @param array $data $post_type => $post_id
- * @return string 
+ * @return string
  */
 function wpcf_pr_admin_update_belongs( $post_id, $data ) {
 
+    $errors = array();
     $post = get_post( intval( $post_id ) );
-    if ( empty( $post ) ) {
-        return false;
+    if ( empty( $post->ID ) ) {
+        return new WP_Error( 'wpcf_update_belongs',
+                sprintf( __( 'Missing child post ID %d', 'wpcf' ),
+                        intval( $post_id ) ) );
     }
 
     foreach ( $data as $post_type => $post_owner_id ) {
-        $post_owner = get_post( intval( $post_owner_id ) );
-        if ( intval( $post_owner_id ) == 0 ) {
-            delete_post_meta( $post_id, '_wpcf_belongs_' . $post_type . '_id' );
-        } else if ( !empty( $post_owner ) ) {
-            update_post_meta( $post_id, '_wpcf_belongs_' . $post_type . '_id',
-                    $post_owner_id );
+        // Check if relationship exists
+        if ( !wpcf_relationship_is_parent( $post_type, $post->post_type ) ) {
+            $errors[] = sprintf( __( 'Relationship do not exist %s -> %s',
+                            'wpcf' ), strval( $post_type ),
+                    strval( $post->post_type ) );
+            continue;
         }
+        if ( $post_owner_id == '0' ) {
+            delete_post_meta( $post_id, "_wpcf_belongs_{$post_type}_id" );
+            continue;
+        }
+        $post_owner = get_post( intval( $post_owner_id ) );
+        // Check if owner post exists
+        if ( empty( $post_owner->ID ) ) {
+            $errors[] = sprintf( __( 'Missing parent post ID %d', 'wpcf' ),
+                    intval( $post_owner_id ) );
+            continue;
+        }
+        // Check if owner post type matches required
+        if ( $post_owner->post_type != $post_type ) {
+            $errors[] = sprintf( __( 'Parent post ID %d is not type of %s',
+                            'wpcf' ), intval( $post_owner_id ),
+                    strval( $post_type ) );
+            continue;
+        }
+        update_post_meta( $post_id, "_wpcf_belongs_{$post_type}_id", $post_owner->ID );
+    }
+
+    if ( !empty( $errors ) ) {
+        return new WP_Error( 'wpcf_update_belongs', implode( '; ', $errors ) );
     }
 
     return __( 'Post updated', 'wpcf' );
@@ -301,13 +382,13 @@ function wpcf_pr_admin_update_belongs( $post_id, $data ) {
 
 /**
  * Pagination link.
- * 
+ *
  * @param type $post
  * @param type $post_type
  * @param type $page
  * @param type $prev
  * @param type $next
- * @return string 
+ * @return string
  */
 function wpcf_pr_admin_has_pagination( $post, $post_type, $page, $prev, $next,
         $per_page = 20, $count = 20 ) {
@@ -370,9 +451,9 @@ function wpcf_pr_admin_has_pagination( $post, $post_type, $page, $prev, $next,
 
 /**
  * Save post hook.
- * 
+ *
  * @param type $parent_post_id
- * @return string 
+ * @return string
  */
 function wpcf_pr_admin_save_post_hook( $parent_post_id ) {
 
@@ -384,12 +465,11 @@ function wpcf_pr_admin_save_post_hook( $parent_post_id ) {
      */
     static $cached = array();
     /*
-     * 
+     *
      * TODO Monitor this
      */
     // Remove main hook?
     // CHECKPOINT We remove temporarily main hook
-//    remove_action( 'save_post', 'wpcf_admin_save_post_hook', 10, 2 );
     if ( !isset( $cached[$parent_post_id] ) ) {
         if ( isset( $_POST['wpcf_post_relationship'][$parent_post_id] ) ) {
             $wpcf->relationship->save_children( $parent_post_id,
@@ -404,11 +484,6 @@ function wpcf_pr_admin_save_post_hook( $parent_post_id ) {
         // WPML
         wpcf_wpml_relationship_save_post_hook( $parent_post_id );
 
-        // Restore main hook?
-//    add_action( 'save_post', 'wpcf_admin_save_post_hook', 10, 2 );
-        // Actually needs looping over all relationships
-//        debug($_POST['wpcf_pr_belongs']);
-
         $cached[$parent_post_id] = true;
     }
 
@@ -416,7 +491,7 @@ function wpcf_pr_admin_save_post_hook( $parent_post_id ) {
 
 /**
  * Filters AJAX 'cd_verify' action data.
- * 
+ *
  * @global type $wpcf
  * @param type $posted
  * @param type $field
@@ -427,8 +502,21 @@ function wpcf_relationship_ajax_data_filter( $posted, $field ) {
     global $wpcf;
 
     $value = $wpcf->relationship->get_submitted_data(
-            $wpcf->relationship->parent->ID, $wpcf->relationship->child->ID,
-            $field );
+        $wpcf->relationship->parent->ID,
+        $wpcf->relationship->child->ID,
+        $field
+    );
 
     return is_null( $value ) ? $posted : $value;
+}
+
+/**
+ * Checks if post type is parent
+ * @param type $parent_post_type
+ * @param type $child_post_type
+ * @return type
+ */
+function wpcf_relationship_is_parent( $parent_post_type, $child_post_type ) {
+    $has = wpcf_pr_admin_get_has( $parent_post_type );
+    return isset( $has[$child_post_type] );
 }

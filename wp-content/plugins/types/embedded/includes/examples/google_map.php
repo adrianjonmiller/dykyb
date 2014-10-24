@@ -150,14 +150,15 @@ function wpcf_fields_google_map_editor_callback( $field, $settings ) {
     ob_start();
 
     ?>
-    <label><input type="text" name="width" value="<?php echo isset( $settings['width'] ) ? $settings['width'] : '425'; ?>" />&nbsp;<?php _e('Width', 'wpcf'); ?></label>
+    <label><input type="text" name="width" value="<?php echo isset( $settings['width'] ) ? $settings['width'] : '425'; ?>" />&nbsp;<?php _e( 'Width',
+            'wpcf' ); ?></label>
     <br />
-    <label><input type="text" name="height" value="<?php echo isset( $settings['height'] ) ? $settings['height'] : '350'; ?>" />&nbsp;<?php _e('Height', 'wpcf'); ?></label>
+    <label><input type="text" name="height" value="<?php echo isset( $settings['height'] ) ? $settings['height'] : '350'; ?>" />&nbsp;<?php _e( 'Height',
+            'wpcf' ); ?></label>
     <?php
     $form = ob_get_contents();
     ob_get_clean();
     return array(
-//        'supports' => array('styling', 'style'),
         'tabs' => array(
             'display' => array(
                 'menu_title' => __( 'Display', 'wpcf' ),
@@ -209,5 +210,34 @@ function wpcf_fields_google_map_view( $data ) {
             . '&amp;source=embed" style="color:#0000FF;text-align:left">'
             . __( 'View Larger Map', 'wpcf' )
             . '</a></small><br />';
+}
+
+function WPToolset_Field_Google_Map_loader()
+{
+
+    if ( class_exists('WPToolset_Field_Google_Map' ) ) {
+        return;
     }
 
+    class WPToolset_Field_Google_Map extends FieldFactory
+    {
+        public function metaform()
+        {
+            $attributes =  $this->getAttr();
+
+            $metaform = array();
+            $metaform[] = array(
+                '#type' => 'textfield',
+                '#title' => $this->getTitle(),
+                '#description' => $this->getDescription(),
+                '#name' => $this->getName(),
+                '#value' => $this->getValue(),
+                '#validate' => $this->getValidationData(),
+                '#repetitive' => $this->isRepetitive(),
+                '#attributes' => $attributes,
+            );
+            return $metaform;
+        }
+
+    }
+}

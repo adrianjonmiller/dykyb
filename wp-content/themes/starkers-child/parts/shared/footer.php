@@ -1,7 +1,3 @@
-		</div>
-		<div id="main-footer">
-		</div>
-	</div>
 </div>	
 <footer id="footer">
 	<div class="container">

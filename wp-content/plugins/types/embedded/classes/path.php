@@ -1,7 +1,12 @@
 <?php
-
 /**
- *  WPCF_Path
+ * WPCF_Path
+ *
+ * $HeadURL: https://www.onthegosystems.com/misc_svn/cck/tags/1.6.1/embedded/classes/path.php $
+ * $LastChangedDate: 2014-05-12 22:47:19 +0800 (Mon, 12 May 2014) $
+ * $LastChangedRevision: 22250 $
+ * $LastChangedBy: marcin $
+ *
  */
 final class WPCF_Path
 {
@@ -191,8 +196,12 @@ final class WPCF_Path
 
         $url .= "://" . $_SERVER['HTTP_HOST']/* $_SERVER["SERVER_NAME"] */;
 
-        if ( $with_port && isset( $_SERVER["SERVER_PORT"] ) && "80" != $_SERVER["SERVER_PORT"] )
-            $url .= ":" . $_SERVER["SERVER_PORT"];
+        if ( $with_port && isset( $_SERVER["SERVER_PORT"] ) && "80" != $_SERVER["SERVER_PORT"] ) {
+            $re = sprintf( '/:%d$/', $_SERVER['SERVER_PORT'] );
+            if ( !preg_match( $re, $url ) ) {
+                $url .= ":" . $_SERVER["SERVER_PORT"];
+            }
+        }
 
         if ( $trailing_slash )
             $url .= '/';
@@ -273,16 +282,21 @@ final class WPCF_Path
         $baseurl = $use_baseurl ? self::getBaseUrl() : self::getHostUrl();
 
         if ( 0 === strpos( $__FILE__, $docroot ) ) {
-            return $baseurl . self::str_after( $__FILE__, $docroot );
+            return self::_join_paths( $baseurl, self::str_after( $__FILE__, $docroot ) );
         } else {
             $map = self::getUSymlink( /* $_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'] */ );
             if ( !empty( $map ) && false !== strpos( $__FILE__, $map[1] ) ) {
-                return $baseurl . str_replace( $map[1], $map[0], $__FILE__ );
+                return self::_join_paths( $baseurl, str_replace( $map[1], $map[0], $__FILE__ ) );
             } else {
+                return icl_get_file_relpath( $__FILE__ . DIRECTORY_SEPARATOR . 'dummy.php' );
                 // finally here
-                return $baseurl . $__FILE__;
+                return self::_join_paths( $baseurl, $__FILE__ );
             }
         }
+    }
+
+    private static function _join_paths( $part1, $part2 ) {
+        return trailingslashit( $part1 ) . ltrim( $part2, '/' );
     }
 
     public static function getCurrentUrl( $q = true )

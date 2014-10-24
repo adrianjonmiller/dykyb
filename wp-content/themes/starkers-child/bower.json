@@ -1,0 +1,24 @@
+{
+  "name": "starkers-child",
+  "version": "0.0.0",
+  "homepage": "https://github.com/adrianjonmiller/dykyb",
+  "authors": [
+    "Adrian Jon Miller <adrian.miller@rightscale.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "masonry": "~3.1.2",
+    "ionicons": "~1.4.1",
+    "jsbehave": "https://github.com/adrianjonmiller/jsbehave.git",
+    "dont_over_think_it": "https://github.com/adrianjonmiller/dont_over_think_it.git#~0.0.1",
+    "normalize-css": "~3.0.1"
+  }
+}

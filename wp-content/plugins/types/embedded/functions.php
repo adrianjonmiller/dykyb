@@ -2,6 +2,12 @@
 /*
  * Basic and init functions.
  * Since Types 1.2 moved from /embedded/types.php
+ *
+ * $HeadURL: http://plugins.svn.wordpress.org/types/trunk/embedded/functions.php $
+ * $LastChangedDate: 2014-08-22 01:02:43 +0000 (Fri, 22 Aug 2014) $
+ * $LastChangedRevision: 970205 $
+ * $LastChangedBy: brucepearson $
+ *
  */
 
 /**
@@ -131,8 +137,8 @@ function wpcf_embedded_check_import() {
                         '</a>' );
                 wpcf_admin_message( $text );
             }
-            if ( $auto_import || (isset( $_GET['types-embedded-import'] ) && isset( $_GET['_wpnonce'] )
-                    && wp_verify_nonce( $_GET['_wpnonce'], 'embedded-import' )) ) {
+            if ( $auto_import || (isset( $_GET['types-embedded-import'] ) && isset( $_GET['_wpnonce'] ) && wp_verify_nonce( $_GET['_wpnonce'],
+                            'embedded-import' )) ) {
                 if ( file_exists( WPCF_EMBEDDED_ABSPATH . '/settings.xml' ) ) {
                     $_POST['overwrite-groups'] = 1;
                     $_POST['overwrite-fields'] = 1;
@@ -180,11 +186,11 @@ function wpcf_promote_types_admin() {
 
     ?>
     <p><?php
-    echo sprintf( __( 'If you want to edit these or create your own you can download the full version of <strong>Types</strong> from <a href="%s">%s</a>',
-                    'wpcf' ), 'http://wordpress.org/extend/plugins/types/',
-            'http://wordpress.org/extend/plugins/types/' );
+        echo sprintf( __( 'If you want to edit these or create your own you can download the full version of <strong>Types</strong> from <a href="%s">%s</a>',
+                        'wpcf' ), 'http://wordpress.org/extend/plugins/types/',
+                'http://wordpress.org/extend/plugins/types/' );
 
-    ?></p>
+        ?></p>
 
     <?php
 }
@@ -205,20 +211,33 @@ function wpcf_types_cf_under_control( $action = 'add', $args = array(),
             foreach ( $args['fields'] as $field_id ) {
                 $field_type = !empty( $args['type'] ) ? $args['type'] : 'textfield';
                 if ( strpos( $field_id, md5( 'wpcf_not_controlled' ) ) !== false ) {
-                    $field_id_add = str_replace( '_' . md5( 'wpcf_not_controlled' ),
-                            '', $field_id );
+                    $field_id_name = str_replace( '_' . md5( 'wpcf_not_controlled' ), '', $field_id );
+                    $field_id_add = preg_replace( '/^wpcf\-/', '', $field_id_name );
+                    $adding_field_with_wpcf_prefix = $field_id_add != $field_id_name;
+                    
                     // Activating field that previously existed in Types
                     if ( array_key_exists( $field_id_add, $fields ) ) {
                         $fields[$field_id_add]['data']['disabled'] = 0;
                     } else { // Adding from outside
                         $fields[$field_id_add]['id'] = $field_id_add;
                         $fields[$field_id_add]['type'] = $field_type;
-                        $fields[$field_id_add]['name'] = $field_id_add;
-                        $fields[$field_id_add]['slug'] = $field_id_add;
+                        if ($adding_field_with_wpcf_prefix) {
+                            $fields[$field_id_add]['name'] = $field_id_add;
+                            $fields[$field_id_add]['slug'] = $field_id_add;
+                        } else {
+                            $fields[$field_id_add]['name'] = $field_id_name;
+                            $fields[$field_id_add]['slug'] = $field_id_name;
+                        }
                         $fields[$field_id_add]['description'] = '';
                         $fields[$field_id_add]['data'] = array();
-                        // @TODO WATCH THIS! MUST NOT BE DROPPED IN ANY CASE
-                        $fields[$field_id_add]['data']['controlled'] = 1;
+                        if ($adding_field_with_wpcf_prefix) {
+                            // This was most probably a previous Types field
+                            // let's take full control
+                            $fields[$field_id_add]['data']['controlled'] = 0;
+                        } else {
+                            // @TODO WATCH THIS! MUST NOT BE DROPPED IN ANY CASE
+                            $fields[$field_id_add]['data']['controlled'] = 1;
+                        }
                     }
                     $unset_key = array_search( $field_id, $args['fields'] );
                     if ( $unset_key !== false ) {
@@ -386,8 +405,7 @@ function wpcf_admin_is_repetitive( $field ) {
         return false;
     }
     $check = intval( $field['data']['repetitive'] );
-    return !empty( $check )
-            && wpcf_admin_can_be_repetitive( $field['type'] );
+    return !empty( $check ) && wpcf_admin_can_be_repetitive( $field['type'] );
 }
 
 /**
@@ -398,7 +416,7 @@ function wpcf_admin_is_repetitive( $field ) {
  * @return type 
  */
 function wpcf_unique_id( $cache_key ) {
-    $cache_key = md5( strval( $cache_key ) . strval( time() ) );
+    $cache_key = md5( strval( $cache_key ) . strval( time() ) . rand() );
     static $cache = array();
     if ( !isset( $cache[$cache_key] ) ) {
         $cache[$cache_key] = 1;
@@ -502,16 +520,19 @@ function wpcf_enqueue_scripts() {
      * 
      * Other components
      */
-
-    // Repetitive
-    wp_enqueue_script(
-            'wpcf-repeater', WPCF_EMBEDDED_RES_RELPATH . '/js/repetitive.js',
-            array('wpcf-js-embedded'), WPCF_VERSION
-    );
-    wp_enqueue_style(
-            'wpcf-repeater', WPCF_EMBEDDED_RES_RELPATH . '/css/repetitive.css',
-            array('wpcf-css-embedded'), WPCF_VERSION
-    );
+    if ( !defined( 'WPTOOLSET_FORMS_ABSPATH' ) ) {
+        // Repetitive
+        wp_enqueue_script(
+                'wpcf-repeater',
+                WPCF_EMBEDDED_RES_RELPATH . '/js/repetitive.js',
+                array('wpcf-js-embedded'), WPCF_VERSION
+        );
+        wp_enqueue_style(
+                'wpcf-repeater',
+                WPCF_EMBEDDED_RES_RELPATH . '/css/repetitive.css',
+                array('wpcf-css-embedded'), WPCF_VERSION
+        );
+    }
 
     // Conditional
     wp_enqueue_script( 'types-conditional' );
@@ -543,14 +564,16 @@ function wpcf_edit_post_screen_scripts() {
             WPCF_VERSION );
     // TODO Switch to 1.11.1 jQuery Validation
 //        wp_enqueue_script( 'types-js-validation' );
-    wp_enqueue_script( 'wpcf-form-validation',
-            WPCF_EMBEDDED_RES_RELPATH . '/js/'
-            . 'jquery-form-validation/jquery.validate.js', array('jquery'),
-            WPCF_VERSION );
-    wp_enqueue_script( 'wpcf-form-validation-additional',
-            WPCF_EMBEDDED_RES_RELPATH . '/js/'
-            . 'jquery-form-validation/additional-methods.min.js',
-            array('jquery'), WPCF_VERSION );
+    if ( !defined( 'WPTOOLSET_FORMS_ABSPATH' ) ) {
+        wp_enqueue_script( 'wpcf-form-validation',
+                WPCF_EMBEDDED_RES_RELPATH . '/js/'
+                . 'jquery-form-validation/jquery.validate.js', array('jquery'),
+                WPCF_VERSION );
+        wp_enqueue_script( 'wpcf-form-validation-additional',
+                WPCF_EMBEDDED_RES_RELPATH . '/js/'
+                . 'jquery-form-validation/additional-methods.min.js',
+                array('jquery'), WPCF_VERSION );
+    }
     wp_enqueue_style( 'wpcf-fields-basic',
             WPCF_EMBEDDED_RES_RELPATH . '/css/basic.css', array(), WPCF_VERSION );
     wp_enqueue_style( 'wpcf-fields-post',
@@ -652,4 +675,39 @@ function wpcf_get_file_url( $file, $use_baseurl = true ) {
  */
 function fields_date_timestamp_neg_supported() {
     return strtotime( 'Fri, 13 Dec 1950 20:45:54 UTC' ) === -601010046;
+}
+
+/**
+ * Returns media size.
+ * 
+ * @global type $content_width
+ * @param type $widescreen
+ * @return type
+ */
+function wpcf_media_size( $widescreen = false ) {
+    global $content_width;
+    if ( !empty( $content_width ) ) {
+        $height = $widescreen ? round( $content_width * 9 / 16 ) : round( $content_width * 3 / 4 );
+        return array($content_width, $height);
+    }
+    return $widescreen ? array(450, 253) : array(450, 320);
+}
+
+/**
+ * Validation wrapper.
+ * 
+ * @param type $method
+ * @param type $args
+ * @return boolean
+ */
+function types_validate( $method, $args ) {
+    WPCF_Loader::loadClass( 'validation-cakephp' );
+    if ( is_callable( array('Wpcf_Cake_Validation', $method) ) ) {
+        if ( !is_array( $args ) ) {
+            $args = array($args);
+        }
+        return @call_user_func_array( array('Wpcf_Cake_Validation', $method),
+                        $args );
+    }
+    return false;
 }

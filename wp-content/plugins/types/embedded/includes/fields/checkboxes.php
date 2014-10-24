@@ -64,8 +64,8 @@ function wpcf_fields_checkboxes_editor_callback( $field, $settings ) {
             $data['checkboxes'][$option_key] = array(
                 'id' => $option_key,
                 'title' => $option['title'],
-                'selected' => isset( $settings['options'][$index]['selected'] ) ? $settings['options'][$index]['selected'] : WPCF_Editor::sanitizeParams( $option['display_value_selected'] ),
-                'not_selected' => isset( $settings['options'][$index]['not_selected'] ) ? $settings['options'][$index]['not_selected'] : WPCF_Editor::sanitizeParams( $option['display_value_not_selected'] ),
+                'selected' => isset( $settings['options'][$index]['selected'] ) ? $settings['options'][$index]['selected'] : htmlspecialchars( stripslashes( strval( ( $option['display_value_selected'] )))),
+                'not_selected' => isset( $settings['options'][$index]['not_selected'] ) ? $settings['options'][$index]['not_selected'] : htmlspecialchars(stripslashes( strval(  $option['display_value_not_selected'] ))),
             );
             $index++;
         }
@@ -135,6 +135,12 @@ function wpcf_fields_checkboxes_editor_submit( $data, $field, $context ) {
                 $i++;
             }
         }
+    } else {
+        if ( $types_attr == 'usermeta' ) {
+            $shortcode .= wpcf_usermeta_get_shortcode( $field, $add );
+        } else {
+            $shortcode .= wpcf_fields_get_shortcode( $field, $add );
+        }
     }
     return $shortcode;
 }
@@ -196,7 +202,7 @@ function wpcf_fields_checkboxes_view( $params ) {
             }
         }
         $output = implode( array_values( $params['field_value'] ), $separator );
-        return empty( $output ) ? '__wpcf_skip_empty' : $output;
+        return empty( $output ) ? '__wpcf_skip_empty' : stripslashes($output);
     }
 
     /*
@@ -243,8 +249,10 @@ function wpcf_fields_checkboxes_view( $params ) {
      * 
      * Only set if it matches settings.
      * Otherwise leave empty and '__wpcf_skip_empty' will be returned.
+     *
      */
-    if ( $option['data']['display'] == 'db' ) {
+
+    if ( isset($option['data']) && $option['data']['display'] == 'db' ) {
         /*
          * 
          * Only if NOT unchecked!
@@ -255,7 +263,7 @@ function wpcf_fields_checkboxes_view( $params ) {
             $output = wpcf_translate( 'field ' . $params['field']['id']
                     . ' option ' . $option['key'] . ' value', $output );
         }
-    } else if ( $option['data']['display'] == 'value' ) {
+    } else if ( isset($option['data']) && $option['data']['display'] == 'value' ) {
         /*
          * 
          * Checked
@@ -336,6 +344,12 @@ function wpcf_fields_checkboxes_conditional_filter_post_meta( $null, $object_id,
                         $single ) );
         if ( is_array( $_meta ) ) {
             $null = empty( $_meta ) ? '1' : '';
+        }
+        /**
+         * be sure do not return string if array is expected!
+         */
+        if ( !$single && !is_array($null) ) {
+            return array($null);
         }
     }
     return $null;

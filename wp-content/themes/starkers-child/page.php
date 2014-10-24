@@ -17,6 +17,10 @@
 <?php Starkers_Utilities::get_template_parts( array( 'parts/shared/html-header', 'parts/shared/header' ) ); ?>
 
 <?php if ( have_posts() ) while ( have_posts() ) : the_post(); ?>
-<?php the_content(); ?>
+		<h3 class="massive-header"><?php the_title(); ?></h3>
+		<div class="module">
+			<?php the_content(); ?>
+		</div>
 <?php endwhile; ?>
+
 <?php Starkers_Utilities::get_template_parts( array( 'parts/shared/footer','parts/shared/html-footer' ) ); ?>

@@ -13,6 +13,13 @@
 		<link rel="shortcut icon" href="<?php echo get_stylesheet_directory_uri(); ?>/img/favicon.ico"/>
 		<script type="text/javascript" src="//use.typekit.net/cst8qzn.js"></script>
 		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+		<script type="text/javascript" src"<?php echo get_stylesheet_directory_uri().'/js/vendors/jquery-ui-1.10.0.custom.min.js'?>"></script>
+		<link rel="stylesheet" type="text/css" href="<?php echo get_stylesheet_directory_uri().'/bower_components/normalize-css/normalize.css'?>">
+		<link rel="stylesheet" type="text/css" href="<?php echo get_stylesheet_directory_uri().'/bower_components/dont_over_think_it/css/grid.css'?>">
+		<link rel="stylesheet" type="text/css" href="<?php echo get_stylesheet_directory_uri().'/styles/main.css'?>">
+		<link rel="stylesheet" type="text/css" href="<?php echo get_stylesheet_directory_uri().'/style.css'?>">
+		<link rel="stylesheet" type="text/css" href="<?php echo get_stylesheet_directory_uri().'/bower_components/ionicons/css/ionicons.min.css'?>">
+		<link rel="stylesheet" type="text/css" href="http://flexslider.woothemes.com/css/flexslider.css">
 		<?php wp_head(); ?>
 	</head>
 	<body <?php body_class(); ?>>

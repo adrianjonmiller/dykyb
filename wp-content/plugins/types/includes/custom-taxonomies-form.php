@@ -1,6 +1,13 @@
 <?php
-/*
+/**
+ *
  * Custom taxonomies form
+ *
+ * $HeadURL: https://www.onthegosystems.com/misc_svn/cck/tags/1.6.1/includes/custom-taxonomies-form.php $
+ * $LastChangedDate: 2014-05-08 21:13:42 +0800 (Thu, 08 May 2014) $
+ * $LastChangedRevision: 22156 $
+ * $LastChangedBy: marcin $
+ *
  */
 
 /**
@@ -349,6 +356,15 @@ function wpcf_admin_custom_taxonomies_form() {
             ),
         ),
     );
+    if ( wpcf_compare_wp_version( '3.5', '>=' )) {
+         $form['vars']['#options']['show_admin_column'] = array(
+                '#name' => 'ct[show_admin_column]',
+                '#default_value' => !empty( $ct['show_admin_column'] ),
+                '#title' => __( 'show_admin_column', 'wpcf' ),
+                '#description' => __( 'Whether to allow automatic creation of taxonomy columns on associated post-types.', 'wpcf' ) . '<br />' . __( 'Default: false.', 'wpcf' ),
+                '#inline' => true,
+            );
+    }
     $query_var = isset( $ct['query_var'] ) ? $ct['query_var'] : '';
     $hidden = !empty( $ct['query_var_enabled'] ) ? '' : ' class="hidden"';
     $form['query_var'] = array(

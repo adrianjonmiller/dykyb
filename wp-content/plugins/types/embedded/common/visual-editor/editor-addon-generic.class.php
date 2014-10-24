@@ -18,8 +18,12 @@ if( !class_exists( 'Editor_addon_generic' ) )
 		function add_menu_css() {
 	        global $pagenow;
 
-	        if ( $pagenow == 'post.php' || $pagenow == 'post-new.php' ||
-			( $pagenow == 'admin.php' && ( isset( $_GET['page'] ) && ( $_GET['page'] == 'views-editor' || $_GET['page'] == 'view-archives-editor' ) ) ) // add the new Views edit screens
+	        if ( $pagenow == 'post.php' ||
+					$pagenow == 'post-new.php' || 
+					( $pagenow == 'admin.php' && ( isset( $_GET['page'] ) &&
+												  ( $_GET['page'] == 'views-editor' ||
+												    $_GET['page'] == 'view-archives-editor' ||
+													$_GET['page'] == 'dd_layouts_edit') ) ) // add the new Views edit screens
 	        ) {
 	            wp_enqueue_style( 'editor_addon_menu',
 	                    EDITOR_ADDON_RELPATH . '/res/css/pro_dropdown_2.css' );
@@ -42,7 +46,7 @@ if( !class_exists( 'Editor_addon_generic' ) )
 		public $view = null;
 				
         public function __construct( $name, $button_text, $plugin_js_url,
-            $media_button_image = '', $print_button = true ) {
+            $media_button_image = '', $print_button = true, $icon_class = '' ) {
             
             global $wplogger;
             $this->logger = $wplogger;
@@ -52,10 +56,10 @@ if( !class_exists( 'Editor_addon_generic' ) )
             $this->button_text = $button_text;
             $this->media_button_image = $media_button_image;
             $this->initialized = false;
+            $this->icon_class = $icon_class;
 
-            
 
-            if ( $media_button_image != '' && $print_button ) {
+            if ( ( $media_button_image != '' || $icon_class != '' ) && $print_button ) {
                 // Media buttons
                 //Adding "embed form" button
                 // WP 3.3 changes
@@ -97,7 +101,7 @@ if( !class_exists( 'Editor_addon_generic' ) )
             $this->items[] = array($text, $shortcode, $menu, $function_name);
         }
         
-        public function add_form_button( $context, $text_area )
+        public function add_form_button( $context, $text_area, $standard_v, $add_views, $codemirror_button )
         {
         	throw new Exception( 'You should implement this method '. __METHOD__ );
         }

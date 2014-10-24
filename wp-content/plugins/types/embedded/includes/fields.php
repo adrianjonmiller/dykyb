@@ -11,7 +11,15 @@
  */
 function wpcf_admin_fields_get_groups( $post_type = 'wp-types-group',
         $only_active = false, $add_fields = false ) {
-    $groups = get_posts( 'numberposts=-1&post_type=' . $post_type . '&post_status=null' );
+    $cache_group = 'types_cache_groups';
+	$cache_key = md5( 'group::_get_group' . $post_type );
+	$cached_object = wp_cache_get( $cache_key, $cache_group );
+    if ( false === $cached_object ) {
+		$groups = get_posts( 'numberposts=-1&post_type=' . $post_type . '&post_status=null' );
+		wp_cache_add( $cache_key, $groups, $cache_group );
+	} else {
+		$groups = $cached_object;
+	}
     $_groups = array();
     if ( !empty( $groups ) ) {
         foreach ( $groups as $k => $group ) {
@@ -129,18 +137,22 @@ function wpcf_admin_fields_get_fields( $only_active = false,
     $required_data = array('id', 'name', 'type', 'slug');
     $fields = (array) get_option( $option_name, array() );
     foreach ( $fields as $k => $v ) {
+        $failed = false;
         foreach ( $required_data as $required ) {
             if ( !isset( $v[$required] ) ) {
                 $failed = true;
                 continue;
             }
+            if ( is_numeric($v[$required]) === true) {
+                $failed = true;
+                continue;
+            }
         }
-        if ( !empty($failed) ) {
+        if ( is_numeric($k) === true || $failed ) {
             unset( $fields[$k] );
             continue;
         }
         // This call loads config file
-        // TODO connect with WPCF_Fields
         $data = wpcf_fields_type_action( $v['type'] );
         if ( empty( $data ) ) {
             unset( $fields[$k] );
@@ -168,10 +180,11 @@ function wpcf_admin_fields_get_fields( $only_active = false,
         }
         $v['id'] = $k;
         $v['meta_key'] = wpcf_types_get_meta_prefix( $v ) . $k;
+        $v['meta_type'] = $option_name == 'wpcf-fields' ? 'postmeta' : 'usermeta'; 
         $fields[$k] = wpcf_sanitize_field( $v );
     }
-    $cache[$cache_key] = $fields;
-    return apply_filters( 'types_fields', $fields );
+    $cache[$cache_key] = apply_filters( 'types_fields', $fields );
+    return $cache[$cache_key];
 }
 
 /**
@@ -241,11 +254,6 @@ function wpcf_admin_fields_get_fields_by_group( $group_id, $key = 'slug',
             continue;
         }
         $results[$field_id] = $fields[$field_id];
-//        $field = wpcf_admin_fields_get_field( $field_id, false, false, false,
-//                $meta_name );
-//        if ( !empty( $field ) ) {
-//            $results[$field_id] = $field;
-//        }
     }
     if ( $use_cache ) {
         $cache[$cache_key] = $results;
@@ -461,6 +469,23 @@ function wpcf_admin_get_groups_by_template( $templates = array('default'),
 }
 
 /**
+ * Get file fullpath to include
+ *
+ * param @string $basename
+ *
+ * return @string
+ *
+ */
+function wpcf_get_fullpath_by_field_type($basename)
+{
+    return sprintf(
+        '%s/fields/%s.php',
+        dirname( __FILE__ ),
+        preg_replace('/[^\w]+/', '', $basename)
+    );
+}
+
+/**
  * Loads type configuration file and calls action.
  * 
  * @param type $type
@@ -482,7 +507,7 @@ function wpcf_fields_type_action( $type, $func = '', $args = array() ) {
         } else {
             $file = '';
         }
-        $file_embedded = WPCF_EMBEDDED_INC_ABSPATH . '/fields/' . $type . '.php';
+        $file_embedded = wpcf_get_fullpath_by_field_type($type);
         if ( file_exists( $file ) || file_exists( $file_embedded ) ) {
             if ( file_exists( $file ) ) {
                 require_once $file;

@@ -106,7 +106,7 @@ function wpcf_fields_radio_editor_submit( $data, $field, $context ) {
     if ( $context == 'usermeta' ) {
         $add .= wpcf_get_usermeta_form_addon_submit();
     }
-    if ( $data['display'] == 'value' && !empty( $data['options'] ) ) {
+    if ( isset( $data['display'] ) && $data['display'] == 'value' && !empty( $data['options'] ) ) {
         $shortcode = '';
         foreach ( $data['options'] as $option_id => $value ) {
             $shortcode .= '[types ' . $types_attr . '="' . $field['slug']
@@ -144,10 +144,13 @@ function wpcf_fields_radio_view( $params ) {
     // See if user specified output for each field
     if ( isset( $params['option'] ) ) {
         foreach ( $field['data']['options'] as $option_key => $option ) {
-            if ( isset( $option['value'] )
-                    && $option['value'] == $params['field_value']
+            if ( isset( $option['value'] ) ) {
+                $test_val = stripslashes( strval( $option['value'] ) );
+                if ($test_val == $params['field_value']
                     && $option_key == $params['option'] ) {
-                return htmlspecialchars_decode( $params['#content'] );
+
+                    return htmlspecialchars_decode($params['#content']);
+                }
             }
         }
 //        return ' ';
@@ -158,7 +161,7 @@ function wpcf_fields_radio_view( $params ) {
         $field_value = $params['field_value'];
         foreach ( $field['data']['options'] as $option_key => $option ) {
             if ( isset( $option['value'] )
-                    && $option['value'] == $params['field_value'] ) {
+                    && stripslashes( $option['value'] )  == stripslashes( $params['field_value'] ) ) {
                 $field_value = wpcf_translate( 'field ' . $params['field']['id'] . ' option '
                         . $option_key . ' title', $option['title'] );
                 if ( isset( $params['field']['data']['display'] )
@@ -172,5 +175,6 @@ function wpcf_fields_radio_view( $params ) {
         }
         $output = $field_value;
     }
-    return $output;
+
+    return   $output;
 }
