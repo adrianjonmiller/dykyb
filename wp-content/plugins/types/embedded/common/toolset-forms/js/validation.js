@@ -7,17 +7,17 @@
  *
  * @see class WPToolset_Validation
  *
- * $HeadURL: https://www.onthegosystems.com/misc_svn/common/tags/Views-1.6.4-CRED-1.3.2-Types-1.6.4-Acces-1.2.3/toolset-forms/js/validation.js $
- * $LastChangedDate: 2014-09-12 17:57:24 +0800 (Fri, 12 Sep 2014) $
- * $LastChangedRevision: 27017 $
- * $LastChangedBy: francesco $
+ * $HeadURL: http://plugins.svn.wordpress.org/types/tags/1.6.5.1/embedded/common/toolset-forms/js/validation.js $
+ * $LastChangedDate: 2015-01-28 06:42:34 +0000 (Wed, 28 Jan 2015) $
+ * $LastChangedRevision: 1077234 $
+ * $LastChangedBy: iworks $
  *
  */
 //var wptValidationData = {};
 
 var wptValidationForms = [];
 var wptValidation = (function($) {
-    function init() {
+    function init() {        
         /**
          * add extension to validator method
          */
@@ -27,12 +27,20 @@ var wptValidation = (function($) {
         });      
         
         /**
+         * add hexadecimal to validator method
+         */
+        $.validator.addMethod("hexadecimal", function(value, element, param) {            
+            return value=="" || /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value);            
+        });
+        
+        /**
          * add extension to validator method require
          */
         $.validator.addMethod("required", function(value, element, param) {                                     
                 // check if dependency is met
                 if ( !this.depend(param, element) )
                         return "dependency-mismatch";
+                                        
                 switch( element.nodeName.toLowerCase() ) {
                 case 'select':                        
                         var val = $(element).val();                      
@@ -47,7 +55,19 @@ var wptValidation = (function($) {
                         });
                         //#########################################################################
                         return val && $.trim(val).length > 0;
-                case 'input':
+                case 'input':                                            
+//                        if (jQuery(element).hasClass("hasDatepicker")) {
+//                            element = jQuery(element).siblings( 'input[type="hidden"]' );
+//                            value = element.val();
+//                            element = element[0];  
+//                            console.log(value+" -> "+this.getLength(value, element));
+//                            return this.getLength(value, element) > 0;
+//                        }
+
+                        if (jQuery(element).hasClass("hasDatepicker")) {
+                            return false;
+                        }
+
                         if ( this.checkable(element) )
                                 return this.getLength(value, element) > 0;
                 default:

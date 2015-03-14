@@ -7,10 +7,10 @@
  *
  * @since Types 1.2
  *
- * $HeadURL: https://www.onthegosystems.com/misc_svn/cck/tags/1.6.3/embedded/bootstrap.php $
- * $LastChangedDate: 2014-09-12 20:22:46 +0800 (Fri, 12 Sep 2014) $
- * $LastChangedRevision: 27032 $
- * $LastChangedBy: marcin $
+ * $HeadURL: http://plugins.svn.wordpress.org/types/tags/1.6.5.1/embedded/bootstrap.php $
+ * $LastChangedDate: 2015-02-24 10:05:51 +0000 (Tue, 24 Feb 2015) $
+ * $LastChangedRevision: 1097977 $
+ * $LastChangedBy: iworks $
  *
  */
 
@@ -131,7 +131,7 @@ function wpcf_embedded_init() {
     // Define necessary constants if plugin is not present
     // This ones are skipped if used as embedded code!
     if ( !defined( 'WPCF_VERSION' ) ) {
-        define( 'WPCF_VERSION', '1.6.3' );
+        define( 'WPCF_VERSION', '1.6.5.1' );
         define( 'WPCF_META_PREFIX', 'wpcf-' );
     }
 
@@ -300,7 +300,15 @@ function wpcf_embedded_init() {
     // 'attachment' = Media
     //
     $wpcf->excluded_post_types = array(
-        'revision', 'view', 'view-template', 'cred-form', 'nav_menu_item', 'mediapage',
+        'dd_layouts',
+        'cred-form',
+        'mediapage',
+        'nav_menu_item',
+        'revision',
+        'view',
+        'view-template',
+        'wp-types-group',
+        'wp-types-user-group',
     );
 
     // Init loader

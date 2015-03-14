@@ -2,10 +2,12 @@
 	<h1 id="logo"><a href="<?php echo home_url(); ?>"><img src="<?php echo get_stylesheet_directory_uri() ?>/img/Logo.3.0.svg" alt="" title="" /></a>
 	<div class="word-slider" data-behavior="flexslider">
 				<ul class="slides">
-					<li class="word">beautiful</li>
-					<li class="word">amazing</li>
-					<li class="word">unique</li>
-					<li class="word">incredible</li>
+					<?php
+					$args = array( 'post_type' => 'words', 'order' => 'ASC' );
+					$loop = new WP_Query( $args );?>
+					<?php while ( $loop->have_posts() ) : $loop->the_post();?>
+						<li class="word"><?php the_title(); ?></li>
+					<?php endwhile; ?>
 				</ul>
 			</div>
 	</h1>

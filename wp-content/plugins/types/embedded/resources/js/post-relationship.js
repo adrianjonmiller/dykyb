@@ -19,6 +19,21 @@ var tChildTable = (function($) {
                 .bind('wpListAddEnd', taxAdjust);
         // Init non-hierarchical taxonomies
         tTagBox.init(selector);
+        /**
+         * bind to children pagination buttons
+         */
+        $('.wpcf-pr-pagination-link').on('click', function() {
+            param_pagination_name = $(this).data('pagination-name');
+            if ( param_pagination_name ) {
+                number_of_posts = $('select[name="'+param_pagination_name+'"]').val();
+                re = new RegExp(param_pagination_name+'=\\d+');
+                $(this).attr(
+                    'href',
+                    $(this).attr('href').replace(re, param_pagination_name+'='+number_of_posts)
+                );
+            }
+            return true;
+        });
     }
 
     function taxAdjust() {
@@ -33,9 +48,6 @@ var tChildTable = (function($) {
         reset: init
     }
 })(jQuery, undefined);
-
-
-
 
 /*
  * Hierarchical taxonomies form handling on post edit screen.
@@ -414,6 +426,7 @@ jQuery(document).ready(function($) {
         return false;
     });
     jQuery('.wpcf-pr-delete-ajax').live('click', function() {
+        var $button = $(this), $table = $button.parents('.js-types-relationship-child-posts').find('table');
         var answer = confirm(wpcf_pr_del_warning);
         if (answer == false) {
             return false;
@@ -440,6 +453,17 @@ jQuery(document).ready(function($) {
                 object.next().fadeOut(function() {
                     jQuery(this).remove();
                 });
+                /**
+                 * reload
+                 */
+                selectedIndex = $('#wpcf-post-relationship .wpcf-pr-pagination-select').prop('selectedIndex');
+                if ( $('tbody tr', $table).length < 2 ) {
+                    if ( selectedIndex ) {
+                        selectedIndex--;
+                        $('#wpcf-post-relationship .wpcf-pr-pagination-select').prop( 'selectedIndex', selectedIndex);
+                    }
+                }
+                $('#wpcf-post-relationship .wpcf-pr-pagination-select').trigger('change');
             }
         });
         return false;

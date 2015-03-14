@@ -2,10 +2,10 @@
 /*
  * Fields and groups form functions.
  *
- * $HeadURL: https://www.onthegosystems.com/misc_svn/cck/tags/1.6.1/includes/usermeta-form.php $
- * $LastChangedDate: 2014-08-14 10:10:16 +0800 (Thu, 14 Aug 2014) $
- * $LastChangedRevision: 25956 $
- * $LastChangedBy: bruce $
+ * $HeadURL: http://plugins.svn.wordpress.org/types/tags/1.6.5.1/includes/usermeta-form.php $
+ * $LastChangedDate: 2015-01-28 06:42:34 +0000 (Wed, 28 Jan 2015) $
+ * $LastChangedRevision: 1077234 $
+ * $LastChangedBy: iworks $
  *
  */
 require_once WPCF_EMBEDDED_ABSPATH . '/classes/validate.php';
@@ -297,7 +297,8 @@ function wpcf_admin_usermeta_form() {
                         . '&amp;wpcf_action=usermeta_insert_existing'
                         . '&amp;field=' . $field['id'] ) . '&amp;_wpnonce='
                 . wp_create_nonce( 'usermeta_insert_existing' ) . '" '
-                . 'class="wpcf-fields-add-ajax-link button-secondary" onclick="jQuery(this).parent().fadeOut();">'
+                . 'class="wpcf-fields-add-ajax-link button-secondary" onclick="jQuery(this).parent().fadeOut();" '
+                . 'data-slug="' . $field['id'] . '">'
                 . htmlspecialchars( stripslashes( $field['name'] ) ) . '</a>'
                 . '<a href="' . admin_url( 'admin-ajax.php'
                         . '?action=wpcf_ajax'
@@ -343,10 +344,9 @@ function wpcf_admin_usermeta_form() {
         )
     );
     if (!$update) {
-        $form['title']['#attributes']['onfocus'] = 'if (jQuery(this).val() == \'' . __('Enter group title',
-                        'wpcf') . '\') { jQuery(this).val(\'\'); }';
-        $form['title']['#attributes']['onblur'] = 'if (jQuery(this).val() == \'\') { jQuery(this).val(\'' . __('Enter group title',
-                        'wpcf') . '\') }';
+        $form['title']['#attributes']['data-label'] = addcslashes(__( 'Enter group title', 'wpcf' ), '"');
+        $form['title']['#attributes']['onfocus'] = 'if (jQuery(this).val() == jQuery(this).data(\'label\')) { jQuery(this).val(\'\'); }';
+        $form['title']['#attributes']['onblur'] = 'if (jQuery(this).val() == \'\') { jQuery(this).val(jQuery(this).data(\'label\')) }';
     }
     $form['description'] = array(
         '#type' => 'textarea',
@@ -356,14 +356,11 @@ function wpcf_admin_usermeta_form() {
                         'wpcf'),
     );
     if (!$update) {
-        $form['description']['#attributes']['onfocus'] = 'if (jQuery(this).val() == \''
-                . __('Enter a description for this group', 'wpcf') . '\') { jQuery(this).val(\'\'); }';
-        $form['description']['#attributes']['onblur'] = 'if (jQuery(this).val() == \'\') { jQuery(this).val(\''
-                . __('Enter a description for this group', 'wpcf') . '\') }';
+        $form['description']['#attributes']['data-label'] = addcslashes(__( 'Enter a description for this group', 'wpcf' ), '"');
+        $form['description']['#attributes']['onfocus'] = 'if (jQuery(this).val() == jQuery(this).data(\'label\')) { jQuery(this).val(\'\'); }';
+        $form['description']['#attributes']['onblur'] = 'if (jQuery(this).val() == \'\') { jQuery(this).val(jQuery(this).data(\'label\')) }';
     }
 
-   
-	
 	// Show Fields for
 	global $wp_roles;
     $options = array();

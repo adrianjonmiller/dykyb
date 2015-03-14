@@ -2,10 +2,10 @@
 /*
  * Custom Fields Control Screen
  *
- * $HeadURL: https://www.onthegosystems.com/misc_svn/cck/tags/1.6.1/includes/usermeta-control.php $
- * $LastChangedDate: 2014-06-26 18:57:18 +0800 (Thu, 26 Jun 2014) $
- * $LastChangedRevision: 24376 $
- * $LastChangedBy: marcin $
+ * $HeadURL: http://plugins.svn.wordpress.org/types/tags/1.6.5.1/includes/usermeta-control.php $
+ * $LastChangedDate: 2015-01-16 14:28:15 +0000 (Fri, 16 Jan 2015) $
+ * $LastChangedRevision: 1069430 $
+ * $LastChangedBy: iworks $
  *
  */
 /**
@@ -293,8 +293,13 @@ function wpcf_admin_user_fields_control_bulk_actions($action = '') {
                                     'wpcf'), implode(', ', $success)));
         }
         if (!empty($failed)) {
-            wpcf_admin_message_store(sprintf(__('Fields %s are not Types fields. Types wont delete these fields.',
-                                    'wpcf'), implode(', ', $failed)));
+            wpcf_admin_message_store(
+                sprintf(
+                    __('Fields %s are not Types fields. Types wont delete these fields.', 'wpcf'),
+                    implode(', ', $failed)
+                ),
+                'error'
+            );
         }
     }
     wp_redirect($_SERVER['REQUEST_URI']);

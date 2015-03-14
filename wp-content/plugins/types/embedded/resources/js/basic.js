@@ -4,10 +4,10 @@
  * For now full and embedded version use this script.
  * Before moving full-version-only code - make sure it's not needed here.
  *
- * $HeadURL: https://www.onthegosystems.com/misc_svn/cck/tags/1.6.3/embedded/resources/js/basic.js $
- * $LastChangedDate: 2014-09-11 16:36:28 +0800 (Thu, 11 Sep 2014) $
- * $LastChangedRevision: 26949 $
- * $LastChangedBy: marcin $
+ * $HeadURL: http://plugins.svn.wordpress.org/types/tags/1.6.5.1/embedded/resources/js/basic.js $
+ * $LastChangedDate: 2015-01-28 06:42:34 +0000 (Wed, 28 Jan 2015) $
+ * $LastChangedRevision: 1077234 $
+ * $LastChangedBy: iworks $
  *
  */
 
@@ -19,6 +19,15 @@ var wpcfFormGroupsSupportTemplatesState = new Array();
 var wpcfFieldsEditorCallback_redirect = null;
 
 jQuery(document).ready(function(){
+    /**
+     * modal advertising
+     */
+    if(jQuery.isFunction(jQuery.fn.types_modal_box)) {
+        jQuery('.wpcf-disabled-on-submit').types_modal_box();
+    }
+    jQuery('.wpcf-notif-description a').on('click', function() {
+        jQuery(this).attr('target', '_blank');
+    });
     //user suggestion
     if(jQuery.isFunction(jQuery.suggest)) {
         jQuery('.input').suggest("admin-ajax.php?action=wpcf_types_suggest_user&tax=post_tag", {
@@ -155,7 +164,6 @@ jQuery(document).ready(function(){
                     jQuery('#'+parentID).append('<div class="wpcf-form-error-unique-value wpcf-form-error">'+wpcfFormUniqueValuesCheckText+'</div>');
                     jQuery(this).parents('fieldset').children('.fieldset-wrapper').slideDown();
                     jQuery(this).focus();
-
                 }
 
                 checkedArr[parentID].push(currentValue);
@@ -202,6 +210,12 @@ jQuery(document).ready(function(){
         // Check field slugs unique
         passed = true;
         checkedArr = new Array();
+        /**
+         * first fill array with defined, but unused fields
+         */
+        jQuery('#wpcf-form-groups-user-fields .wpcf-fields-add-ajax-link:visible').each(function(){
+            checkedArr.push(jQuery(this).data('slug'));
+        });
         jQuery('.wpcf-forms-field-slug').each(function(index){
             var currentValue = jQuery(this).val().toLowerCase();
             if (currentValue != ''
@@ -494,7 +508,9 @@ function wpcfCdCheckDateCustomized(object) {
  */
 function wpcfLoadingButton() {
     jQuery('.wpcf-disabled-on-submit').attr('disabled', 'disabled').each(function(){
-        jQuery(this).after('<div id="'+jQuery(this).attr('id')+'-loading" class="wpcf-loading">&nbsp;</div>');
+        if ( 'undefined' == typeof(types_modal) ) {
+            jQuery(this).after('<div id="'+jQuery(this).attr('id')+'-loading" class="wpcf-loading">&nbsp;</div>');
+        }
     });
 }
 /**
@@ -503,6 +519,11 @@ function wpcfLoadingButton() {
 function wpcfLoadingButtonStop() {
     jQuery('.wpcf-disabled-on-submit').removeAttr('disabled');
     jQuery('.wpcf-loading').fadeOut();
+    //Fix https://icanlocalize.basecamphq.com/projects/7393061-toolset/todo_items/194177056/comments
+    //type modal didnt disappeared
+    jQuery('.types_modal_box').remove();
+    jQuery('.types_block_page').remove();
+    
 }
 
 /**

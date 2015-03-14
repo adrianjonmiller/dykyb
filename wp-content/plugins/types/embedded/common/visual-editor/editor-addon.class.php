@@ -17,9 +17,12 @@ if ( file_exists( dirname(__FILE__) . '/editor-addon-generic.class.php') && !cla
          * @param string $text_area
          * @param boolean $standard_v is this a standard V button
          */
-        function add_form_button( $context, $text_area = 'textarea#content', $standard_v = true, $add_views = false, $codemirror_button = false ) {
+        function add_form_button( $context, $text_area = '', $standard_v = true, $add_views = false, $codemirror_button = false ) {
             global $wp_version;
-
+            
+            if ( empty($context) &&  $text_area == '' ){
+                return;
+            }
             // WP 3.3 changes ($context arg is actually a editor ID now)
             if ( version_compare( $wp_version, '3.1.4', '>' ) && !empty( $context ) ) {
                 $text_area = $context;
@@ -90,7 +93,7 @@ if ( file_exists( dirname(__FILE__) . '/editor-addon-generic.class.php') && !cla
             $dropdown_class = 'js-editor_addon_dropdown-'.$this->name;
             $icon_class = 'js-wpv-shortcode-post-icon-'.$this->name;
 			if ( $this->name == 'wpv-views' ) {
-				$button_label = __( 'Views', 'wpv-views' );
+				$button_label = __( 'Fields and Views', 'wpv-views' );
 			} else if ( $this->name == 'types' ) {
 				$button_label = __( 'Types', 'wpv-views' );
 			} else {
@@ -120,7 +123,7 @@ if ( file_exists( dirname(__FILE__) . '/editor-addon-generic.class.php') && !cla
             // Codemirror (new layout) button
             if ( $codemirror_button ){
                  $addon_button = '<button class="js-code-editor-toolbar-button js-code-editor-toolbar-button-v-icon button-secondary">'.
-                        '<i class="icon-views-logo ont-icon-18"></i><span class="button-label">'. __('Fields', 'wpv-views') .'</span></button>';
+                        '<i class="icon-views-logo ont-icon-18"></i><span class="button-label">'. __('Fields and Views', 'wpv-views') .'</span></button>';
             }
             // add search box
             $searchbar = $this->get_search_bar();
@@ -192,8 +195,9 @@ if ( file_exists( dirname(__FILE__) . '/editor-addon-generic.class.php') && !cla
                 );
             
             if ( isset( $sitepress ) && function_exists( 'wpml_string_shortcode' ) ) {
-		$this->items[] = array(__('Translatable string', 'wpv-views'), 'wpml-string',__('Basic', 'wpv-views'),'wpv_insert_translatable_string_popup()');
-	    }
+				$nonce = wp_create_nonce('wpv_editor_callback');
+				$this->items[] = array(__('Translatable string', 'wpv-views'), 'wpml-string',__('Basic', 'wpv-views'),'WPViews.shortcodes_gui.wpv_insert_translatable_string_popup(\'' . $nonce . '\')');
+			}
 	    
             
 
@@ -317,7 +321,7 @@ if ( file_exists( dirname(__FILE__) . '/editor-addon-generic.class.php') && !cla
             $dropdown_class = 'js-editor_addon_dropdown-'.$this->name;
             $icon_class = 'js-wpv-shortcode-post-icon-'.$this->name;
             if ( $this->name == 'wpv-views' ) {
-				$button_label = __( 'Views', 'wpv-views' );
+				$button_label = __( 'Fields and Views', 'wpv-views' );
 			} else if ( $this->name == 'types' ) {
 				$button_label = __( 'Types', 'wpv-views' );
 			} else {
@@ -332,7 +336,7 @@ if ( file_exists( dirname(__FILE__) . '/editor-addon-generic.class.php') && !cla
             // Codemirrir (new layout) button
             if ( $codemirror_button ){
                  $addon_button = '<button class="js-code-editor-toolbar-button js-code-editor-toolbar-button-v-icon button-secondary">'.
-                        '<i class="icon-views-logo ont-icon-18"></i><span class="button-label">'. __('Fields', 'wpv-views') .'</span></button>';
+                        '<i class="icon-views-logo ont-icon-18"></i><span class="button-label">'. __('Fields and Views', 'wpv-views') .'</span></button>';
             }
             // add search box
             $searchbar = $this->get_search_bar();
@@ -672,13 +676,13 @@ if ( file_exists( dirname(__FILE__) . '/editor-addon-generic.class.php') && !cla
                             '_wpv_settings', true );
                     $title = $vtemplate->post_title . ' - ' . __( 'Post View',
                                     'wpv-views' );
-                    if ( isset( $view_settings['query_type'][0] ) && $view_settings['query_type'][0] == 'taxonomy' ) {
+                    if ( isset( $view_settings['query_type'] ) && isset( $view_settings['query_type'][0] ) && $view_settings['query_type'][0] == 'taxonomy' ) {
                         $title = $vtemplate->post_title . ' - ' . __( 'Taxonomy View',
                                         'wpv-views' );
                         if ( $post_name == __( 'Post View', 'wpv-views' ) || $post_name == __( 'User View', 'wpv-views' ) ) {
                             continue;
                         }
-                    } elseif ( isset( $view_settings['query_type'][0] ) && $view_settings['query_type'][0] == 'users' ) {
+                    } elseif ( isset( $view_settings['query_type'] ) && isset( $view_settings['query_type'][0] ) && $view_settings['query_type'][0] == 'users' ) {
                         $title = $vtemplate->post_title . ' - ' . __( 'User View',
                                         'wpv-views' );
                         if ( $post_name == __( 'Post View', 'wpv-views' ) || $post_name == __( 'Taxonomy View', 'wpv-views' ) ) {
@@ -743,29 +747,6 @@ if ( file_exists( dirname(__FILE__) . '/editor-addon-generic.class.php') && !cla
             return $plugin_array;
         }
     }
-    
-    if( !function_exists('editor_add_js') )
-    {
-        function editor_add_js() {
-            global $pagenow;
-
-           if ( 
-            $pagenow == 'post.php' ||
-            $pagenow == 'post-new.php' ||
-            ( $pagenow == 'admin.php' && ( isset( $_GET['page'] ) &&
-                                          ( $_GET['page'] == 'views-editor' ||
-                                            $_GET['page'] == 'view-archives-editor' ||
-                                            $_GET['page'] == 'dd_layouts_edit') ) ) // add the new Views edit screens
-            ) {
-
-
-                wp_enqueue_script( 'icl_editor-script',
-                        EDITOR_ADDON_RELPATH . '/res/js/icl_editor_addon_plugin.js',
-                        array() );
-            }
-        }
-    }
-    
 
     /**
      * Renders JS for inserting shortcode from thickbox popup to editor.

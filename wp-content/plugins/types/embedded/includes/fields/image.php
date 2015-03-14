@@ -1,15 +1,15 @@
 <?php
 /**
  *
- * $HeadURL: https://www.onthegosystems.com/misc_svn/cck/tags/1.6.1/embedded/includes/fields/image.php $
- * $LastChangedDate: 2014-07-15 22:18:54 +0800 (Tue, 15 Jul 2014) $
- * $LastChangedRevision: 24974 $
- * $LastChangedBy: marcin $
+ * $HeadURL: http://plugins.svn.wordpress.org/types/tags/1.6.5.1/embedded/includes/fields/image.php $
+ * $LastChangedDate: 2014-11-21 08:53:16 +0000 (Fri, 21 Nov 2014) $
+ * $LastChangedRevision: 1029976 $
+ * $LastChangedBy: iworks $
  *
  */
+
 add_filter( 'wpcf_fields_type_image_value_get', 'wpcf_fields_image_value_filter' );
-add_filter( 'wpcf_fields_type_image_value_save',
-        'wpcf_fields_image_value_filter' );
+add_filter( 'wpcf_fields_type_image_value_save', 'wpcf_fields_image_value_filter' );
 
 // Do not wrap if 'url' is TRUE
 add_filter( 'types_view', 'wpcf_fields_image_view_filter', 10, 6 );
@@ -224,7 +224,7 @@ function wpcf_fields_image_editor_submit( $data, $field, $context ) {
         $add .= ' onload="' . $data['onload'] . '"';
     }
 
-    if ( $data['image_size'] != 'full' ) {
+    if ( array_key_exists('image_size', $data) && $data['image_size'] != 'full' ) {
         if ( !empty( $data['proportional'] ) ) {
             $settings['resize'] = isset( $data['resize'] ) ? $data['resize'] : 'proportional';
             $add .= " resize=\"{$settings['resize']}\"";
@@ -585,7 +585,9 @@ function wpcf_fields_image_get_data( $image ) {
     );
 
     // Strip GET vars
-    $image = strtok( $image, '?' );
+    if ( !apply_filters('wpcf_allow_questionmark_in_image_url', false) ) {
+        $image = strtok( $image, '?' );
+    }
 
     // Basic URL check
     if ( strpos( $image, 'http' ) != 0 ) {
@@ -661,9 +663,10 @@ function wpcf_fields_image_get_data( $image ) {
  * @return type 
  */
 function wpcf_fields_image_value_filter( $value ) {
-    if ( is_string( $value ) ) {
+    if ( is_string( $value ) && !apply_filters('wpcf_allow_questionmark_in_image_url', false) ) {
         return strtok( $value, '?' );
     }
+    return $value;
 }
 
 /**
